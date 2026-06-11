@@ -13,7 +13,9 @@ import java.util.Map;
 public interface EventService {
     List<EventDto> getAllEvents(boolean sorted);
 
-    Event getEventById(String id);
+    EventDto getEventById(String id);
+
+    Event findEventById(String id);
 
     Event addEvent(@Valid EventDto eventDto);
 

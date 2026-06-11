@@ -21,7 +21,7 @@ public class Event extends BaseGalleryEntity {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @OneToMany(mappedBy = "EVENT", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private Set<Image> images = new HashSet<>();
 
     public EventType getEventType() {

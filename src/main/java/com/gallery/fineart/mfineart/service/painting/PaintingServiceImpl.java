@@ -3,7 +3,6 @@ package com.gallery.fineart.mfineart.service.painting;
 import com.gallery.fineart.mfineart.dto.PaintingDto;
 import com.gallery.fineart.mfineart.enumeration.Availability;
 import com.gallery.fineart.mfineart.exception.collection.CollectionNotFoundException;
-import com.gallery.fineart.mfineart.exception.image.ImagesForPaintingNotFoundException;
 import com.gallery.fineart.mfineart.exception.image.InvalidImagesThumbnailCountException;
 import com.gallery.fineart.mfineart.exception.painting.PaintingNotFoundException;
 import com.gallery.fineart.mfineart.mapper.PaintingMapper;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,7 +61,12 @@ public class PaintingServiceImpl implements PaintingService {
     }
 
     @Override
-    public Painting getPaintingById(String id) {
+    public PaintingDto getPaintingById(String id) {
+        return paintingMapper.toPaintingDto(findPaintingById(id));
+    }
+
+    @Override
+    public Painting findPaintingById(String id) {
         if (StringUtils.isEmpty(id)) {
             throw new IllegalArgumentException("Parameter ID cannot be null");
         }
@@ -114,7 +117,6 @@ public class PaintingServiceImpl implements PaintingService {
         }
 
         validateImagesHaveThumbnail(imagesFiles.values());
-        validateImagesNamePrefixMatchesPaintingName(imagesFiles.keySet(), paintingDto.getName());
 
         Painting painting = addPainting(paintingDto);
 
@@ -261,24 +263,6 @@ public class PaintingServiceImpl implements PaintingService {
 
         if (thumbnailsCount != EXACT_NUMBER_OF_THUMBNAILS_PER_SET_OF_IMAGES) {
             throw new InvalidImagesThumbnailCountException(imagesThumbnails.size(), thumbnailsCount);
-        }
-    }
-
-    /**
-     * "MultipartFile.getName()" returns name of the parameter in the HTTP request, not the file name!
-     * ------------------------------------------------------------------------------------------
-     * if "file.getOriginalFilename()" == ../../../name.jpg
-     * then "Paths.get(file.getOriginalFilename()).getFileName().toString()" == name.jpg
-     * ------------------------------------------------------------------------------------------
-     * if "file.getOriginalFilename()" == name.jpg
-     * then "Paths.get(file.getOriginalFilename()).getFileName().toString()" == name.jpg
-     */
-    private void validateImagesNamePrefixMatchesPaintingName(Set<MultipartFile> imagesFiles, String paintingName) {
-        for (MultipartFile file : imagesFiles) {
-            String fileName = Paths.get(file.getOriginalFilename()).getFileName().toString();
-            if (!fileName.startsWith(paintingName)) {
-                throw new ImagesForPaintingNotFoundException(paintingName, fileName);
-            }
         }
     }
 

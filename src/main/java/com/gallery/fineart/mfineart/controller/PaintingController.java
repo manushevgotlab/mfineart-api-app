@@ -2,8 +2,7 @@ package com.gallery.fineart.mfineart.controller;
 
 import com.gallery.fineart.mfineart.dto.PaintingDto;
 import com.gallery.fineart.mfineart.dto.PaintingUploadDto;
-import com.gallery.fineart.mfineart.mapper.PaintingMapper;
-import com.gallery.fineart.mfineart.service.painting.PaintingServiceImpl;
+import com.gallery.fineart.mfineart.service.painting.PaintingService;
 import jakarta.validation.Valid;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,10 @@ import java.util.List;
 @RequestMapping(value = "/paintings")
 public class PaintingController {
 
-    private final PaintingServiceImpl paintingService;
+    private final PaintingService paintingService;
 
     @Autowired
-    public PaintingController(PaintingServiceImpl paintingService) {
+    public PaintingController(PaintingService paintingService) {
         this.paintingService = paintingService;
     }
 

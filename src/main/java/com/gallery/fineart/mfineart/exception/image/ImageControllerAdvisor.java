@@ -19,10 +19,4 @@ public class ImageControllerAdvisor {
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(ImagesForPaintingNotFoundException.class)
-    public ResponseEntity<Object> imagesForPaintingNotFound(Exception ex) {
-        Map<String, Object> body = generateBodyResponse(ex);
-
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-    }
 }

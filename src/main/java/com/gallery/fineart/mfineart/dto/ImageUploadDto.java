@@ -8,7 +8,6 @@ public class ImageUploadDto {
     private Boolean isThumbnail;
     @NotNull
     private MultipartFile imageFile;
-    private Long collectionId;
     private Long paintingId;
     private Long eventId;
 
@@ -26,14 +25,6 @@ public class ImageUploadDto {
 
     public void setImageFile(MultipartFile imageFile) {
         this.imageFile = imageFile;
-    }
-
-    public Long getCollectionId() {
-        return collectionId;
-    }
-
-    public void setCollectionId(Long collectionId) {
-        this.collectionId = collectionId;
     }
 
     public Long getPaintingId() {

@@ -15,7 +15,9 @@ public interface PaintingService {
 
     List<PaintingDto> getAllPaintings(boolean sorted);
 
-    Painting getPaintingById(String id);
+    PaintingDto getPaintingById(String id);
+
+    Painting findPaintingById(String id);
 
     List<PaintingDto> getAllPaintingsForCollection(boolean sorted, String collectionId);
 

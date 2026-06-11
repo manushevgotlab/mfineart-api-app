@@ -46,7 +46,7 @@ public class CollectionController {
 
     @PostMapping("/collection-images")
     public ResponseEntity<Long> addCollectionWithImage(@Valid @RequestBody CollectionUploadDto dto) {
-        Long collectionId = collectionService.addCollection(dto.getCollectionDto(), dto.getImageFile()).getId();
+        Long collectionId = collectionService.addCollection(dto.getCollectionDto(), dto.getThumbnailFile()).getId();
 
         return ResponseEntity.ok(collectionId);
     }

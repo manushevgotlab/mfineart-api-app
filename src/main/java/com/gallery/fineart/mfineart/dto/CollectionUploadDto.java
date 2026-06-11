@@ -1,9 +1,7 @@
 package com.gallery.fineart.mfineart.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.web.multipart.MultipartFile;
 
 public class CollectionUploadDto {
@@ -11,8 +9,8 @@ public class CollectionUploadDto {
     @NotNull
     @Valid
     private CollectionDto collectionDto;
-    @NotEmpty
-    private ImmutablePair<MultipartFile, Boolean> imageFile;
+    @NotNull
+    private MultipartFile thumbnailFile;
 
     public CollectionDto getCollectionDto() {
         return collectionDto;
@@ -22,11 +20,11 @@ public class CollectionUploadDto {
         this.collectionDto = collectionDto;
     }
 
-    public ImmutablePair<MultipartFile, Boolean> getImageFile() {
-        return imageFile;
+    public MultipartFile getThumbnailFile() {
+        return thumbnailFile;
     }
 
-    public void setImageFile(ImmutablePair<MultipartFile, Boolean> imageFile) {
-        this.imageFile = imageFile;
+    public void setThumbnailFile(MultipartFile thumbnailFile) {
+        this.thumbnailFile = thumbnailFile;
     }
 }

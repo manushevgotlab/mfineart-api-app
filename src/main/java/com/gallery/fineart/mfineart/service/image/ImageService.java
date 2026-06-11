@@ -20,8 +20,6 @@ public interface ImageService {
 
     List<ImageDto> getImagesForPainting(String paintingId);
 
-    List<ImageDto> getImagesForCollection(String collectionId);
-
     List<ImageDto> getImagesForEvent(String eventId);
 
     String addImage(ImageUploadDto imageDto);

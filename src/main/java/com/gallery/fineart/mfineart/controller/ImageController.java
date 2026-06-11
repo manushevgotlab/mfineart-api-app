@@ -2,7 +2,6 @@ package com.gallery.fineart.mfineart.controller;
 
 import com.gallery.fineart.mfineart.dto.ImageDto;
 import com.gallery.fineart.mfineart.dto.ImageUploadDto;
-import com.gallery.fineart.mfineart.dto.PaintingDto;
 import com.gallery.fineart.mfineart.service.image.ImageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,13 +46,6 @@ public class ImageController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ImageDto>> getImagesForCollection(@RequestParam String collectionId) {
-        List<ImageDto> imageDtos = imageService.getImagesForCollection(collectionId);
-
-        return ResponseEntity.ok(imageDtos);
-    }
-
-    @GetMapping
     public ResponseEntity<List<ImageDto>> getImagesForEvent(@RequestParam String eventId) {
         List<ImageDto> imageDtos = imageService.getImagesForEvent(eventId);
 
@@ -79,8 +71,4 @@ public class ImageController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping
-    public ResponseEntity<String> bindImagesToCollection(@RequestParam boolean collectionId) {
-        return ResponseEntity.ok().build();
-    }
 }

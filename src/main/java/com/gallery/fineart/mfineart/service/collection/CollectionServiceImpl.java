@@ -3,21 +3,17 @@ package com.gallery.fineart.mfineart.service.collection;
 import com.gallery.fineart.mfineart.dto.CollectionDto;
 import com.gallery.fineart.mfineart.exception.collection.CollectionNotFoundException;
 import com.gallery.fineart.mfineart.exception.collection.CollectionWithNameAlreadyExists;
-import com.gallery.fineart.mfineart.exception.collection.ImagesForCollectionNotFoundException;
-import com.gallery.fineart.mfineart.exception.image.InvalidImagesThumbnailCountException;
 import com.gallery.fineart.mfineart.exception.image.InvalidNumberOfImagesForCollection;
 import com.gallery.fineart.mfineart.mapper.CollectionMapper;
 import com.gallery.fineart.mfineart.model.ArtCollection;
 import com.gallery.fineart.mfineart.repository.CollectionRepository;
-import com.gallery.fineart.mfineart.repository.PaintingRepository;
-import com.gallery.fineart.mfineart.service.image.ImageService;
+import com.gallery.fineart.mfineart.service.s3.S3Service;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,20 +21,18 @@ import java.util.stream.Collectors;
 public class CollectionServiceImpl implements CollectionService {
 
     private static final int EXACT_NUMBER_OF_IMAGES_FOR_COLLECTION = 1;
-    private static final long EXACT_NUMBER_OF_THUMBNAILS_PER_SET_OF_IMAGES_FOR_COLLECTION = 1;
-    private final PaintingRepository paintingRepository;
     private final CollectionRepository collectionRepository;
-    private final ImageService imageService;
     private final CollectionMapper collectionMapper;
+    private final S3Service s3Service;
 
     @Autowired
-    public CollectionServiceImpl(PaintingRepository paintingRepository, CollectionRepository collectionRepository, ImageService imageService, CollectionMapper collectionMapper) {
-        this.paintingRepository = paintingRepository;
+    public CollectionServiceImpl(CollectionRepository collectionRepository,
+                                   CollectionMapper collectionMapper,
+                                   S3Service s3Service) {
         this.collectionRepository = collectionRepository;
-        this.imageService = imageService;
         this.collectionMapper = collectionMapper;
+        this.s3Service = s3Service;
     }
-
 
     @Override
     public List<CollectionDto> getAllCollections(boolean sorted) {
@@ -75,17 +69,20 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    public ArtCollection addCollection(CollectionDto collectionDto, ImmutablePair<MultipartFile, Boolean> imageFile) {
-        if (Objects.isNull(imageFile)) {
+    public ArtCollection addCollection(CollectionDto collectionDto, MultipartFile thumbnailFile) {
+        if (Objects.isNull(thumbnailFile) || thumbnailFile.isEmpty()) {
             throw new InvalidNumberOfImagesForCollection(EXACT_NUMBER_OF_IMAGES_FOR_COLLECTION, 0);
         }
 
-        validateCollectionImagesHaveThumbnail(imageFile.right);
-        validateImagesNamePrefixMatchesCollectionName(imageFile.left, collectionDto.getName());
-
         ArtCollection artCollection = addCollection(collectionDto);
 
-        imageService.addImageForEntity(imageFile.left, imageFile.right, artCollection);
+        try {
+            String thumbnailUrl = s3Service.uploadFile(thumbnailFile);
+            artCollection.setThumbnailUrl(thumbnailUrl);
+            collectionRepository.save(artCollection);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         return artCollection;
     }
@@ -102,8 +99,11 @@ public class CollectionServiceImpl implements CollectionService {
         ArtCollection artCollection = optionalCollection.get();
         artCollection.setName(collectionDto.getName());
         artCollection.setDescription(collectionDto.getDescription());
-        if(Objects.nonNull(collectionDto.getDate())) {
+        if (Objects.nonNull(collectionDto.getDate())) {
             artCollection.setDate(collectionDto.getDate());
+        }
+        if (Objects.nonNull(collectionDto.getThumbnailUrl())) {
+            artCollection.setThumbnailUrl(collectionDto.getThumbnailUrl());
         }
 
         collectionRepository.save(artCollection);
@@ -139,28 +139,6 @@ public class CollectionServiceImpl implements CollectionService {
         Optional<ArtCollection> optionalCollection = collectionRepository.findByName(name);
         if (optionalCollection.isPresent()) {
             throw new CollectionWithNameAlreadyExists(name);
-        }
-    }
-
-    private void validateCollectionImagesHaveThumbnail(Boolean imageIsThumbnail) {
-        if(Objects.isNull(imageIsThumbnail)) {
-            throw new IllegalArgumentException("Parameter imageIsThumbnail cannot be null");
-        }
-
-        if(!imageIsThumbnail) {
-            throw new InvalidImagesThumbnailCountException(EXACT_NUMBER_OF_IMAGES_FOR_COLLECTION, 0);
-
-        }
-    }
-
-    private void validateImagesNamePrefixMatchesCollectionName(MultipartFile imageFile, String collectionName) {
-        if(Objects.isNull(imageFile)) {
-            throw new IllegalArgumentException("Parameter imageFile cannot be null");
-        }
-
-        String fileName = Paths.get(imageFile.getOriginalFilename()).getFileName().toString();
-        if (!fileName.startsWith(collectionName)) {
-            throw new ImagesForCollectionNotFoundException(collectionName, fileName);
         }
     }
 

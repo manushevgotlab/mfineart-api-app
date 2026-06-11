@@ -5,7 +5,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.util.HashSet;
@@ -18,10 +17,10 @@ public class ArtCollection extends BaseGalleryEntity {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @OneToOne(mappedBy = "collection", cascade = CascadeType.ALL)
-    private Image thumbnail;
+    @Column(name = "THUMBNAIL_URL")
+    private String thumbnailUrl;
 
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "artCollection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Painting> paintings = new HashSet<>();
 
     public String getDescription() {
@@ -32,12 +31,12 @@ public class ArtCollection extends BaseGalleryEntity {
         this.description = description;
     }
 
-    public Image getThumbnail() {
-        return thumbnail;
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
     }
 
-    public void setThumbnail(Image thumbnail) {
-        this.thumbnail = thumbnail;
+    public void setThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public Set<Painting> getPaintings() {

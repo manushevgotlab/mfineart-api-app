@@ -2,7 +2,6 @@ package com.gallery.fineart.mfineart.service.event;
 
 import com.gallery.fineart.mfineart.dto.EventDto;
 import com.gallery.fineart.mfineart.exception.event.EventNotFoundException;
-import com.gallery.fineart.mfineart.exception.image.ImagesForPaintingNotFoundException;
 import com.gallery.fineart.mfineart.exception.image.InvalidImagesThumbnailCountException;
 import com.gallery.fineart.mfineart.mapper.EventMapper;
 import com.gallery.fineart.mfineart.model.Event;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,6 +43,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto getEventById(String id) {
+        return eventMapper.toEventDto(findEventById(id));
+    }
+
+    @Override
+    public Event findEventById(String id) {
         if (StringUtils.isEmpty(id)) {
             throw new IllegalArgumentException("Parameter ID cannot be null");
         }
@@ -55,7 +58,8 @@ public class EventServiceImpl implements EventService {
             throw new EventNotFoundException(id);
         }
 
-        return eventMapper.toEventDto(eventOptional.get());    }
+        return eventOptional.get();
+    }
 
     @Override
     public Event addEvent(EventDto eventDto) {
@@ -74,7 +78,6 @@ public class EventServiceImpl implements EventService {
         }
 
         validateImagesHaveThumbnail(imagesFiles.values());
-        validateImagesNamePrefixMatchesEventName(imagesFiles.keySet(), eventDto.getName());
 
         Event event = addEvent(eventDto);
 
@@ -144,12 +147,4 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void validateImagesNamePrefixMatchesEventName(Set<MultipartFile> imagesFiles, String paintingName) {
-        for (MultipartFile file : imagesFiles) {
-            String fileName = Paths.get(file.getOriginalFilename()).getFileName().toString();
-            if (!fileName.startsWith(paintingName)) {
-                throw new ImagesForPaintingNotFoundException(paintingName, fileName);
-            }
-        }
-    }
 }

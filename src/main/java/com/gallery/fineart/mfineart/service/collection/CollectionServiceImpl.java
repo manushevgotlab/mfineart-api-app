@@ -1,12 +1,15 @@
 package com.gallery.fineart.mfineart.service.collection;
 
 import com.gallery.fineart.mfineart.dto.CollectionDto;
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.exception.collection.CollectionNotFoundException;
 import com.gallery.fineart.mfineart.exception.collection.CollectionWithNameAlreadyExists;
 import com.gallery.fineart.mfineart.exception.image.InvalidNumberOfImagesForCollection;
 import com.gallery.fineart.mfineart.mapper.CollectionMapper;
 import com.gallery.fineart.mfineart.model.ArtCollection;
 import com.gallery.fineart.mfineart.repository.CollectionRepository;
+import com.gallery.fineart.mfineart.service.content.ContentLifecycleService;
+import com.gallery.fineart.mfineart.service.content.PublicContentAccessService;
 import com.gallery.fineart.mfineart.service.s3.S3Service;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,20 +27,27 @@ public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
     private final CollectionMapper collectionMapper;
     private final S3Service s3Service;
+    private final PublicContentAccessService publicContentAccessService;
+    private final ContentLifecycleService contentLifecycleService;
 
     @Autowired
     public CollectionServiceImpl(CollectionRepository collectionRepository,
                                    CollectionMapper collectionMapper,
-                                   S3Service s3Service) {
+                                   S3Service s3Service,
+                                   PublicContentAccessService publicContentAccessService,
+                                   ContentLifecycleService contentLifecycleService) {
         this.collectionRepository = collectionRepository;
         this.collectionMapper = collectionMapper;
         this.s3Service = s3Service;
+        this.publicContentAccessService = publicContentAccessService;
+        this.contentLifecycleService = contentLifecycleService;
     }
 
     @Override
     public List<CollectionDto> getAllCollections(boolean sorted) {
         return collectionRepository.findAll()
                 .stream()
+                .filter(this::isVisibleToCaller)
                 .map(collectionMapper::toCollectionDto)
                 .sorted(sorted ? Comparator.comparing(CollectionDto::getDate) : Comparator.naturalOrder())
                 .collect(Collectors.toList());
@@ -55,7 +65,9 @@ public class CollectionServiceImpl implements CollectionService {
             throw new CollectionNotFoundException(id);
         }
 
-        return collectionMapper.toCollectionDto(collectionOptional.get());
+        ArtCollection artCollection = collectionOptional.get();
+        requireVisibleToCaller(artCollection, id);
+        return collectionMapper.toCollectionDto(artCollection);
     }
 
     @Override
@@ -85,6 +97,27 @@ public class CollectionServiceImpl implements CollectionService {
         }
 
         return artCollection;
+    }
+
+    @Override
+    public ContentStatusUpdateDto updateContentStatus(ContentStatusUpdateDto contentStatusUpdateDto) {
+        if (Objects.isNull(contentStatusUpdateDto) || Objects.isNull(contentStatusUpdateDto.getId())) {
+            throw new IllegalArgumentException("Content status update requires an id");
+        }
+
+        ArtCollection artCollection = collectionRepository.findById(contentStatusUpdateDto.getId())
+                .orElseThrow(() -> new CollectionNotFoundException(String.valueOf(contentStatusUpdateDto.getId())));
+        contentLifecycleService.applyStatus(
+                artCollection,
+                contentStatusUpdateDto.getContentStatus(),
+                contentStatusUpdateDto.getPublishAt());
+        collectionRepository.save(artCollection);
+
+        ContentStatusUpdateDto response = new ContentStatusUpdateDto();
+        response.setId(artCollection.getId());
+        response.setContentStatus(artCollection.getContentStatus());
+        response.setPublishAt(artCollection.getPublishAt());
+        return response;
     }
 
     @Override
@@ -139,6 +172,16 @@ public class CollectionServiceImpl implements CollectionService {
         Optional<ArtCollection> optionalCollection = collectionRepository.findByName(name);
         if (optionalCollection.isPresent()) {
             throw new CollectionWithNameAlreadyExists(name);
+        }
+    }
+
+    private boolean isVisibleToCaller(ArtCollection artCollection) {
+        return publicContentAccessService.isStaffUser() || publicContentAccessService.isPubliclyVisible(artCollection);
+    }
+
+    private void requireVisibleToCaller(ArtCollection artCollection, String id) {
+        if (!isVisibleToCaller(artCollection)) {
+            throw new CollectionNotFoundException(id);
         }
     }
 

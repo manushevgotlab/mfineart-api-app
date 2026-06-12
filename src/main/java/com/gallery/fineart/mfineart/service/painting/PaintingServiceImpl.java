@@ -1,5 +1,6 @@
 package com.gallery.fineart.mfineart.service.painting;
 
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.PaintingDto;
 import com.gallery.fineart.mfineart.enumeration.Availability;
 import com.gallery.fineart.mfineart.exception.collection.CollectionNotFoundException;
@@ -10,6 +11,8 @@ import com.gallery.fineart.mfineart.model.ArtCollection;
 import com.gallery.fineart.mfineart.model.Painting;
 import com.gallery.fineart.mfineart.repository.CollectionRepository;
 import com.gallery.fineart.mfineart.repository.PaintingRepository;
+import com.gallery.fineart.mfineart.service.content.ContentLifecycleService;
+import com.gallery.fineart.mfineart.service.content.PublicContentAccessService;
 import com.gallery.fineart.mfineart.service.image.ImageService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +31,22 @@ public class PaintingServiceImpl implements PaintingService {
     private final CollectionRepository collectionRepository;
     private final PaintingMapper paintingMapper;
     private final ImageService imageService;
+    private final PublicContentAccessService publicContentAccessService;
+    private final ContentLifecycleService contentLifecycleService;
 
     @Autowired
     public PaintingServiceImpl(PaintingRepository paintingRepository,
                                PaintingMapper paintingMapper,
                                CollectionRepository collectionRepository,
-                               ImageService imageService) {
+                               ImageService imageService,
+                               PublicContentAccessService publicContentAccessService,
+                               ContentLifecycleService contentLifecycleService) {
         this.paintingRepository = paintingRepository;
         this.paintingMapper = paintingMapper;
         this.collectionRepository = collectionRepository;
         this.imageService = imageService;
+        this.publicContentAccessService = publicContentAccessService;
+        this.contentLifecycleService = contentLifecycleService;
     }
 
     @Override
@@ -55,6 +64,7 @@ public class PaintingServiceImpl implements PaintingService {
     public List<PaintingDto> getAllPaintings(boolean sorted) {
         return paintingRepository.findAll()
                 .stream()
+                .filter(this::isVisibleToCaller)
                 .map(paintingMapper::toPaintingDto)
                 .sorted(sorted ? Comparator.comparing(PaintingDto::getDate) : Comparator.naturalOrder())
                 .collect(Collectors.toList());
@@ -62,7 +72,9 @@ public class PaintingServiceImpl implements PaintingService {
 
     @Override
     public PaintingDto getPaintingById(String id) {
-        return paintingMapper.toPaintingDto(findPaintingById(id));
+        Painting painting = findPaintingById(id);
+        requireVisibleToCaller(painting, id);
+        return paintingMapper.toPaintingDto(painting);
     }
 
     @Override
@@ -86,8 +98,13 @@ public class PaintingServiceImpl implements PaintingService {
             throw new IllegalArgumentException("Parameter collectionId cannot be null");
         }
 
+        ArtCollection collection = collectionRepository.findById(Long.valueOf(collectionId))
+                .orElseThrow(() -> new CollectionNotFoundException(collectionId));
+        requireVisibleToCaller(collection, collectionId);
+
         return paintingRepository.findAllByArtCollection_Id(Long.valueOf(collectionId))
                 .stream()
+                .filter(this::isVisibleToCaller)
                 .map(paintingMapper::toPaintingDto)
                 .sorted(sorted ? Comparator.comparing(PaintingDto::getDate) : Comparator.naturalOrder())
                 .collect(Collectors.toList());
@@ -127,6 +144,26 @@ public class PaintingServiceImpl implements PaintingService {
         }
 
         return painting;
+    }
+
+    @Override
+    public ContentStatusUpdateDto updateContentStatus(ContentStatusUpdateDto contentStatusUpdateDto) {
+        if (Objects.isNull(contentStatusUpdateDto) || Objects.isNull(contentStatusUpdateDto.getId())) {
+            throw new IllegalArgumentException("Content status update requires an id");
+        }
+
+        Painting painting = findPaintingById(String.valueOf(contentStatusUpdateDto.getId()));
+        contentLifecycleService.applyStatus(
+                painting,
+                contentStatusUpdateDto.getContentStatus(),
+                contentStatusUpdateDto.getPublishAt());
+        paintingRepository.save(painting);
+
+        ContentStatusUpdateDto response = new ContentStatusUpdateDto();
+        response.setId(painting.getId());
+        response.setContentStatus(painting.getContentStatus());
+        response.setPublishAt(painting.getPublishAt());
+        return response;
     }
 
     @Override
@@ -284,6 +321,22 @@ public class PaintingServiceImpl implements PaintingService {
     private void validatePaintingAvailability(Availability availability, Double price) {
         if (availability.equals(Availability.AVAILABLE) && Objects.isNull(price)) {
             throw new IllegalArgumentException("Painting price cannot be null when availability is status available");
+        }
+    }
+
+    private boolean isVisibleToCaller(Painting painting) {
+        return publicContentAccessService.isStaffUser() || publicContentAccessService.isPubliclyVisible(painting);
+    }
+
+    private void requireVisibleToCaller(Painting painting, String id) {
+        if (!isVisibleToCaller(painting)) {
+            throw new PaintingNotFoundException(id);
+        }
+    }
+
+    private void requireVisibleToCaller(ArtCollection collection, String id) {
+        if (!publicContentAccessService.isStaffUser() && !publicContentAccessService.isPubliclyVisible(collection)) {
+            throw new CollectionNotFoundException(id);
         }
     }
 }

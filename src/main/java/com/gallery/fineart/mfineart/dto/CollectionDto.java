@@ -1,7 +1,10 @@
 package com.gallery.fineart.mfineart.dto;
 
 
+import com.gallery.fineart.mfineart.enumeration.ContentStatus;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,6 +15,8 @@ public class CollectionDto implements Comparable<CollectionDto> {
     private String description;
     private LocalDate date;
     private String thumbnailUrl;
+    private ContentStatus contentStatus;
+    private LocalDateTime publishAt;
     private Set<Long> paintingIds;
 
     public CollectionDto() {
@@ -56,6 +61,22 @@ public class CollectionDto implements Comparable<CollectionDto> {
 
     public void setThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public ContentStatus getContentStatus() {
+        return contentStatus;
+    }
+
+    public void setContentStatus(ContentStatus contentStatus) {
+        this.contentStatus = contentStatus;
+    }
+
+    public LocalDateTime getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(LocalDateTime publishAt) {
+        this.publishAt = publishAt;
     }
 
     public Set<Long> getPaintingIds() {

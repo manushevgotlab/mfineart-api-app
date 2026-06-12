@@ -1,6 +1,7 @@
 package com.gallery.fineart.mfineart.controller;
 
 import com.gallery.fineart.mfineart.dto.CollectionDto;
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.CollectionUploadDto;
 import com.gallery.fineart.mfineart.service.collection.CollectionService;
 import jakarta.validation.Valid;
@@ -49,6 +50,14 @@ public class CollectionController {
         Long collectionId = collectionService.addCollection(dto.getCollectionDto(), dto.getThumbnailFile()).getId();
 
         return ResponseEntity.ok(collectionId);
+    }
+
+    @PutMapping("/content-status")
+    public ResponseEntity<ContentStatusUpdateDto> updateContentStatus(
+            @Valid @RequestBody ContentStatusUpdateDto contentStatusUpdateDto) {
+        ContentStatusUpdateDto result = collectionService.updateContentStatus(contentStatusUpdateDto);
+
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping

@@ -13,7 +13,7 @@ import java.util.Set;
 
 @Entity
 @Table( name = "EVENT" )
-public class Event extends BaseGalleryEntity {
+public class Event extends PublishableEntity {
 
     @Column(name = "EVENT_TYPE")
     private EventType eventType;

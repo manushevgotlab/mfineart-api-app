@@ -1,5 +1,6 @@
 package com.gallery.fineart.mfineart.service.painting;
 
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.PaintingDto;
 import com.gallery.fineart.mfineart.model.Painting;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ public interface PaintingService {
     Painting addPainting(PaintingDto paintingDto, Map<MultipartFile, Boolean> imagesFiles);
 
     Long editPainting(PaintingDto paintingDto);
+
+    ContentStatusUpdateDto updateContentStatus(ContentStatusUpdateDto contentStatusUpdateDto);
 
     String updatePaintingStatus(String paintingId, String status, Double price);
 

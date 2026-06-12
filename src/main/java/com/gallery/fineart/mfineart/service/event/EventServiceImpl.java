@@ -1,11 +1,14 @@
 package com.gallery.fineart.mfineart.service.event;
 
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.EventDto;
 import com.gallery.fineart.mfineart.exception.event.EventNotFoundException;
 import com.gallery.fineart.mfineart.exception.image.InvalidImagesThumbnailCountException;
 import com.gallery.fineart.mfineart.mapper.EventMapper;
 import com.gallery.fineart.mfineart.model.Event;
 import com.gallery.fineart.mfineart.repository.EventRepository;
+import com.gallery.fineart.mfineart.service.content.ContentLifecycleService;
+import com.gallery.fineart.mfineart.service.content.PublicContentAccessService;
 import com.gallery.fineart.mfineart.service.image.ImageService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,20 +25,27 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
     private final ImageService imageService;
+    private final PublicContentAccessService publicContentAccessService;
+    private final ContentLifecycleService contentLifecycleService;
 
     @Autowired
     public EventServiceImpl(final EventRepository eventRepository,
                             final EventMapper eventMapper,
-                            final ImageService imageService) {
+                            final ImageService imageService,
+                            PublicContentAccessService publicContentAccessService,
+                            ContentLifecycleService contentLifecycleService) {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.imageService = imageService;
+        this.publicContentAccessService = publicContentAccessService;
+        this.contentLifecycleService = contentLifecycleService;
     }
 
     @Override
     public List<EventDto> getAllEvents(boolean sorted) {
         return eventRepository.findAll()
                 .stream()
+                .filter(this::isVisibleToCaller)
                 .map(eventMapper::toEventDto)
                 .sorted(sorted ? Comparator.comparing(EventDto::getDate) : Comparator.naturalOrder())
                 .collect(Collectors.toList());
@@ -43,7 +53,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto getEventById(String id) {
-        return eventMapper.toEventDto(findEventById(id));
+        Event event = findEventById(id);
+        requireVisibleToCaller(event, id);
+        return eventMapper.toEventDto(event);
     }
 
     @Override
@@ -88,6 +100,26 @@ public class EventServiceImpl implements EventService {
         }
 
         return event;
+    }
+
+    @Override
+    public ContentStatusUpdateDto updateContentStatus(ContentStatusUpdateDto contentStatusUpdateDto) {
+        if (Objects.isNull(contentStatusUpdateDto) || Objects.isNull(contentStatusUpdateDto.getId())) {
+            throw new IllegalArgumentException("Content status update requires an id");
+        }
+
+        Event event = findEventById(String.valueOf(contentStatusUpdateDto.getId()));
+        contentLifecycleService.applyStatus(
+                event,
+                contentStatusUpdateDto.getContentStatus(),
+                contentStatusUpdateDto.getPublishAt());
+        eventRepository.save(event);
+
+        ContentStatusUpdateDto response = new ContentStatusUpdateDto();
+        response.setId(event.getId());
+        response.setContentStatus(event.getContentStatus());
+        response.setPublishAt(event.getPublishAt());
+        return response;
     }
 
     @Override
@@ -144,6 +176,16 @@ public class EventServiceImpl implements EventService {
 
         if (thumbnailsCount != EXACT_NUMBER_OF_THUMBNAILS_PER_SET_OF_IMAGES) {
             throw new InvalidImagesThumbnailCountException(imagesThumbnails.size(), thumbnailsCount);
+        }
+    }
+
+    private boolean isVisibleToCaller(Event event) {
+        return publicContentAccessService.isStaffUser() || publicContentAccessService.isPubliclyVisible(event);
+    }
+
+    private void requireVisibleToCaller(Event event, String id) {
+        if (!isVisibleToCaller(event)) {
+            throw new EventNotFoundException(id);
         }
     }
 

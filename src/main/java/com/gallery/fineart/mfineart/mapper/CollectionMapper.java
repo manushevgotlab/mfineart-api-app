@@ -19,6 +19,8 @@ public abstract class CollectionMapper {
     private PaintingRepository paintingRepository;
 
     @Mapping(target = "paintings", expression = "java(fetchPaintings(collectionDto.getPaintingIds()))")
+    @Mapping(target = "contentStatus", ignore = true)
+    @Mapping(target = "publishAt", ignore = true)
     public abstract ArtCollection toCollection(CollectionDto collectionDto);
 
     @Mapping(target = "paintingIds", expression = "java(getPaintingIds(artCollection.getPaintings()))")

@@ -1,5 +1,6 @@
 package com.gallery.fineart.mfineart.controller;
 
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.EventDto;
 import com.gallery.fineart.mfineart.dto.EventUploadDto;
 import com.gallery.fineart.mfineart.service.event.EventService;
@@ -49,6 +50,14 @@ public class EventController {
         Long eventId = eventService.addEvent(dto.getEventDto(), dto.getImagesFiles()).getId();
 
         return ResponseEntity.ok(eventId);
+    }
+
+    @PutMapping("/event/content-status")
+    public ResponseEntity<ContentStatusUpdateDto> updateContentStatus(
+            @Valid @RequestBody ContentStatusUpdateDto contentStatusUpdateDto) {
+        ContentStatusUpdateDto result = eventService.updateContentStatus(contentStatusUpdateDto);
+
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping("/event")

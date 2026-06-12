@@ -1,9 +1,11 @@
 package com.gallery.fineart.mfineart.dto;
 
+import com.gallery.fineart.mfineart.enumeration.ContentStatus;
 import com.gallery.fineart.mfineart.enumeration.EventType;
 import com.gallery.fineart.mfineart.model.Image;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class EventDto implements Comparable<EventDto> {
@@ -13,6 +15,8 @@ public class EventDto implements Comparable<EventDto> {
     private EventType eventType;
     private String description;
     private LocalDate date;
+    private ContentStatus contentStatus;
+    private LocalDateTime publishAt;
     private Set<Image> images;
 
     public EventDto() {
@@ -57,6 +61,22 @@ public class EventDto implements Comparable<EventDto> {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public ContentStatus getContentStatus() {
+        return contentStatus;
+    }
+
+    public void setContentStatus(ContentStatus contentStatus) {
+        this.contentStatus = contentStatus;
+    }
+
+    public LocalDateTime getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(LocalDateTime publishAt) {
+        this.publishAt = publishAt;
     }
 
     public Set<Image> getImages() {

@@ -10,6 +10,7 @@ import com.gallery.fineart.mfineart.model.*;
 import com.gallery.fineart.mfineart.repository.EventRepository;
 import com.gallery.fineart.mfineart.repository.ImageRepository;
 import com.gallery.fineart.mfineart.repository.PaintingRepository;
+import com.gallery.fineart.mfineart.service.content.PublicContentAccessService;
 import com.gallery.fineart.mfineart.service.s3.S3Service;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +33,21 @@ public class ImageServiceImpl implements ImageService {
     private final PaintingRepository paintingRepository;
     private final EventRepository eventRepository;
     private final S3Service s3Service;
+    private final PublicContentAccessService publicContentAccessService;
 
     @Autowired
     public ImageServiceImpl(ImageMapper imageMapper,
                             ImageRepository imageRepository,
                             PaintingRepository paintingRepository,
                             EventRepository eventRepository,
-                            S3Service s3Service) {
+                            S3Service s3Service,
+                            PublicContentAccessService publicContentAccessService) {
         this.imageMapper = imageMapper;
         this.imageRepository = imageRepository;
         this.paintingRepository = paintingRepository;
         this.eventRepository = eventRepository;
         this.s3Service = s3Service;
+        this.publicContentAccessService = publicContentAccessService;
     }
 
     @Override
@@ -126,6 +130,7 @@ public class ImageServiceImpl implements ImageService {
         }
 
         Painting painting = findPaintingById(paintingId);
+        requirePublicPainting(painting, paintingId);
 
         return painting.getImages()
                 .stream()
@@ -140,6 +145,7 @@ public class ImageServiceImpl implements ImageService {
         }
 
         Event event = findEventById(eventId);
+        requirePublicEvent(event, eventId);
 
         return event.getImages()
                 .stream()
@@ -200,6 +206,18 @@ public class ImageServiceImpl implements ImageService {
     private Event findEventById(String eventId) {
         return eventRepository.findById(Long.parseLong(eventId))
                 .orElseThrow(() -> new EventNotFoundException(eventId));
+    }
+
+    private void requirePublicPainting(Painting painting, String paintingId) {
+        if (!publicContentAccessService.isStaffUser() && !publicContentAccessService.isPubliclyVisible(painting)) {
+            throw new PaintingNotFoundException(paintingId);
+        }
+    }
+
+    private void requirePublicEvent(Event event, String eventId) {
+        if (!publicContentAccessService.isStaffUser() && !publicContentAccessService.isPubliclyVisible(event)) {
+            throw new EventNotFoundException(eventId);
+        }
     }
 
     private void editOldThumbnailForEntity(Image image) {

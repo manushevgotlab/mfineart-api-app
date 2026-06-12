@@ -19,5 +19,10 @@ public class BaseControllerAdvisor extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(com.gallery.fineart.mfineart.exception.content.InvalidContentStatusTransitionException.class)
+    public ResponseEntity<Object> handleInvalidContentStatusTransition(RuntimeException ex) {
+        Map<String, Object> body = generateBodyResponse(ex);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
 
 }

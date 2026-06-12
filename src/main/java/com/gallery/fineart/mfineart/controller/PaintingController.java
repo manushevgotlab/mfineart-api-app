@@ -1,5 +1,6 @@
 package com.gallery.fineart.mfineart.controller;
 
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.PaintingDto;
 import com.gallery.fineart.mfineart.dto.PaintingUploadDto;
 import com.gallery.fineart.mfineart.service.painting.PaintingService;
@@ -57,6 +58,14 @@ public class PaintingController {
         Long paintingId = paintingService.addPainting(dto.getPaintingDto(), dto.getImagesFiles()).getId();
 
         return ResponseEntity.ok(paintingId);
+    }
+
+    @PutMapping("/painting/content-status")
+    public ResponseEntity<ContentStatusUpdateDto> updateContentStatus(
+            @Valid @RequestBody ContentStatusUpdateDto contentStatusUpdateDto) {
+        ContentStatusUpdateDto result = paintingService.updateContentStatus(contentStatusUpdateDto);
+
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping("/painting")

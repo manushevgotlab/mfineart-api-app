@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "COLLECTION")
-public class ArtCollection extends BaseGalleryEntity {
+public class ArtCollection extends PublishableEntity {
 
     @Column(name = "DESCRIPTION")
     private String description;

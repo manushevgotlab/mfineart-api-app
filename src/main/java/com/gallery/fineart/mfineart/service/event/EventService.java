@@ -1,5 +1,6 @@
 package com.gallery.fineart.mfineart.service.event;
 
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.dto.EventDto;
 import com.gallery.fineart.mfineart.model.Event;
 import jakarta.validation.Valid;
@@ -22,6 +23,8 @@ public interface EventService {
     Event addEvent(@Valid EventDto eventDto, Map<MultipartFile, Boolean> imagesFiles);
 
     Long editEvent(@Valid EventDto eventDto);
+
+    ContentStatusUpdateDto updateContentStatus(ContentStatusUpdateDto contentStatusUpdateDto);
 
     Boolean deleteEventById(String eventId);
 }

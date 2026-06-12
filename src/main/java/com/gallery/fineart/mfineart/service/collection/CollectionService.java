@@ -1,6 +1,7 @@
 package com.gallery.fineart.mfineart.service.collection;
 
 import com.gallery.fineart.mfineart.dto.CollectionDto;
+import com.gallery.fineart.mfineart.dto.ContentStatusUpdateDto;
 import com.gallery.fineart.mfineart.model.ArtCollection;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ public interface CollectionService {
     ArtCollection addCollection(CollectionDto collectionDto, MultipartFile thumbnailFile);
 
     Long editCollection(@Valid CollectionDto collectionDto);
+
+    ContentStatusUpdateDto updateContentStatus(ContentStatusUpdateDto contentStatusUpdateDto);
 
     Boolean deleteCollectionById(String collectionId);
 }

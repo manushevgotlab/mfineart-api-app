@@ -1,6 +1,7 @@
 package com.gallery.fineart.mfineart.dto;
 
 import com.gallery.fineart.mfineart.enumeration.Availability;
+import com.gallery.fineart.mfineart.enumeration.ContentStatus;
 import com.gallery.fineart.mfineart.enumeration.Material;
 import com.gallery.fineart.mfineart.model.Image;
 import jakarta.validation.constraints.NotBlank;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 public class PaintingDto implements Comparable<PaintingDto> {
@@ -32,6 +34,8 @@ public class PaintingDto implements Comparable<PaintingDto> {
     private Double height;
     @NotNull
     private LocalDate date;
+    private ContentStatus contentStatus;
+    private LocalDateTime publishAt;
 
     public Long getId() {
         return id;
@@ -127,6 +131,22 @@ public class PaintingDto implements Comparable<PaintingDto> {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public ContentStatus getContentStatus() {
+        return contentStatus;
+    }
+
+    public void setContentStatus(ContentStatus contentStatus) {
+        this.contentStatus = contentStatus;
+    }
+
+    public LocalDateTime getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(LocalDateTime publishAt) {
+        this.publishAt = publishAt;
     }
 
     @Override

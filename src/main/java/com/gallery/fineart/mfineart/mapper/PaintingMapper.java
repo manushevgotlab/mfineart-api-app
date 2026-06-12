@@ -18,6 +18,8 @@ public abstract class PaintingMapper {
 
     @Mapping(target = "collection", expression = "java(fetchCollection(paintingDto.getCollectionId()))")
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "contentStatus", ignore = true)
+    @Mapping(target = "publishAt", ignore = true)
     public abstract Painting toPainting(PaintingDto paintingDto);
 
     @Mapping(target = "collectionId", expression = "java(painting.getCollection() != null ? painting.getCollection().getId() : null)")

@@ -37,9 +37,9 @@ public class PaintingController {
         return ResponseEntity.ok(paintingDto);
     }
 
-    @GetMapping
+    @GetMapping("/collection/{collectionId}")
     public ResponseEntity<List<PaintingDto>> getPaintingsByCollectionId(@RequestParam(defaultValue = "true") boolean sorted,
-                                                                        @RequestParam String collectionId) {
+                                                                        @PathVariable String collectionId) {
         List<PaintingDto> paintings = paintingService.getAllPaintingsForCollection(sorted, collectionId);
 
         return ResponseEntity.ok(paintings);

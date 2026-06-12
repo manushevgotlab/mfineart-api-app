@@ -53,5 +53,15 @@ CREATE TABLE IMAGE
     )
 );
 
+-- APP_USER (gallery back-office accounts)
+CREATE TABLE APP_USER
+(
+    ID       NUMBER (10) AUTO_INCREMENT PRIMARY KEY,
+    USERNAME VARCHAR(255) NOT NULL UNIQUE,
+    PASSWORD VARCHAR(255) NOT NULL,
+    ROLE     VARCHAR(50)  NOT NULL,
+    ENABLED  NUMBER(1)    NOT NULL
+);
+
 -- ON DELETE CASCADE means that if a Painting or Event is deleted, its images are deleted too.
 -- DESCRIPTION TEXT > DESCRIPTION VARCHAR(255), because description's length is unpredictable, it can have html code, hyperlinks, etc.

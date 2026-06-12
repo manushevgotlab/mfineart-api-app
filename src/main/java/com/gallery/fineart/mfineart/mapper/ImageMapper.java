@@ -15,24 +15,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Mapper(componentModel = "spring")
 public abstract class ImageMapper {
 
-    private final PaintingRepository paintingRepository;
-    private final EventRepository eventRepository;
+    @Autowired
+    private PaintingRepository paintingRepository;
 
     @Autowired
-    public ImageMapper(PaintingRepository paintingRepository, EventRepository eventRepository) {
-        this.paintingRepository = paintingRepository;
-        this.eventRepository = eventRepository;
-    }
+    private EventRepository eventRepository;
 
-    @Mapping(target = "painting", source = "java(fetchPainting(imageDto.getPaintingId()))")
-    @Mapping(target = "event", source = "java(fetchEvent(imageDto.getEventId()))")
+    @Mapping(target = "painting", expression = "java(fetchPainting(imageDto.getPaintingId()))")
+    @Mapping(target = "event", expression = "java(fetchEvent(imageDto.getEventId()))")
     public abstract Image toImage(ImageDto imageDto);
 
     @Mapping(target = "paintingId", expression = "java(image.getPainting() != null ? image.getPainting().getId() : null)")
     @Mapping(target = "eventId", expression = "java(image.getEvent() != null ? image.getEvent().getId() : null)")
     public abstract ImageDto toImageDto(Image image);
 
-    private Painting fetchPainting(Long paintingId) {
+    protected Painting fetchPainting(Long paintingId) {
         if (paintingId == null) {
             return null;
         }
@@ -44,7 +41,7 @@ public abstract class ImageMapper {
         }
     }
 
-    private Event fetchEvent(Long eventId) {
+    protected Event fetchEvent(Long eventId) {
         if (eventId == null) {
             return null;
         }

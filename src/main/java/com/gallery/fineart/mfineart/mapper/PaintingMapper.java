@@ -13,20 +13,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Mapper(componentModel = "spring")
 public abstract class PaintingMapper {
 
-    private final CollectionRepository collectionRepository;
-
     @Autowired
-    public PaintingMapper(CollectionRepository collectionRepository) {
-        this.collectionRepository = collectionRepository;
-    }
+    private CollectionRepository collectionRepository;
 
-    @Mapping(target = "collection", source = "java(fetchCollection(paintingDto.getCollectionId()))")
+    @Mapping(target = "collection", expression = "java(fetchCollection(paintingDto.getCollectionId()))")
+    @Mapping(target = "images", ignore = true)
     public abstract Painting toPainting(PaintingDto paintingDto);
 
-    @Mapping(target = "collection", source = "java(paintingDto.getCollection().getId())")
+    @Mapping(target = "collectionId", expression = "java(painting.getCollection() != null ? painting.getCollection().getId() : null)")
     public abstract PaintingDto toPaintingDto(Painting painting);
 
-    private ArtCollection fetchCollection(Long collectionId) {
+    protected ArtCollection fetchCollection(Long collectionId) {
+        if (collectionId == null) {
+            return null;
+        }
         try {
             return collectionRepository.findById(collectionId)
                     .orElseThrow(() -> new CollectionNotFoundException(String.valueOf(collectionId)));

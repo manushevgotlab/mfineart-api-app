@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RestController
+@RequestMapping("/images")
 public class ImageController {
 
     private final ImageService imageService;
@@ -23,14 +25,14 @@ public class ImageController {
         return ResponseEntity.ok(imageDtos);
     }
 
-    @GetMapping
-    public ResponseEntity<ImageDto> getImageById(@RequestParam String id) {
-        ImageDto imageDtos = imageService.getImageById(id);
+    @GetMapping("/{id}")
+    public ResponseEntity<ImageDto> getImageById(@PathVariable String id) {
+        ImageDto imageDto = imageService.getImageById(id);
 
-        return ResponseEntity.ok(imageDtos);
+        return ResponseEntity.ok(imageDto);
     }
 
-    @GetMapping
+    @GetMapping("/by-prefix")
     public ResponseEntity<List<ImageDto>> getImagesByPrefix(@RequestParam String prefix,
                                                             @RequestParam(defaultValue = "true") boolean sorted) {
         List<ImageDto> imageDtos = imageService.getImagesByPrefix(prefix, sorted);
@@ -38,15 +40,15 @@ public class ImageController {
         return ResponseEntity.ok(imageDtos);
     }
 
-    @GetMapping
-    public ResponseEntity<List<ImageDto>> getImagesForPainting(@RequestParam String paintingId) {
+    @GetMapping("/painting/{paintingId}")
+    public ResponseEntity<List<ImageDto>> getImagesForPainting(@PathVariable String paintingId) {
         List<ImageDto> imageDtos = imageService.getImagesForPainting(paintingId);
 
         return ResponseEntity.ok(imageDtos);
     }
 
-    @GetMapping
-    public ResponseEntity<List<ImageDto>> getImagesForEvent(@RequestParam String eventId) {
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<List<ImageDto>> getImagesForEvent(@PathVariable String eventId) {
         List<ImageDto> imageDtos = imageService.getImagesForEvent(eventId);
 
         return ResponseEntity.ok(imageDtos);
@@ -59,16 +61,11 @@ public class ImageController {
         return ResponseEntity.ok(url);
     }
 
-    @PutMapping
-    public ResponseEntity<Boolean> updateImageThumbnail(@RequestParam String imageId, @RequestParam Boolean isThumbnail) {
+    @PutMapping("/{imageId}/thumbnail")
+    public ResponseEntity<Boolean> updateImageThumbnail(@PathVariable String imageId,
+                                                        @RequestParam Boolean isThumbnail) {
         Boolean result = imageService.updateImageThumbnail(imageId, isThumbnail);
 
         return ResponseEntity.ok(result);
     }
-
-    @PutMapping
-    public ResponseEntity<String> bindImagesToPainting(@RequestParam boolean paintingId) {
-        return ResponseEntity.ok().build();
-    }
-
 }

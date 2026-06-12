@@ -86,7 +86,7 @@ public class PaintingServiceImpl implements PaintingService {
             throw new IllegalArgumentException("Parameter collectionId cannot be null");
         }
 
-        return paintingRepository.findAllByCollectionId(Long.valueOf(collectionId))
+        return paintingRepository.findAllByArtCollection_Id(Long.valueOf(collectionId))
                 .stream()
                 .map(paintingMapper::toPaintingDto)
                 .sorted(sorted ? Comparator.comparing(PaintingDto::getDate) : Comparator.naturalOrder())

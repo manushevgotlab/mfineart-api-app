@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface PaintingRepository extends JpaRepository<Painting, Long> {
 
-    public List<Painting> findAllByCollectionId(Long collectionId);
+    List<Painting> findAllByArtCollection_Id(Long collectionId);
 }

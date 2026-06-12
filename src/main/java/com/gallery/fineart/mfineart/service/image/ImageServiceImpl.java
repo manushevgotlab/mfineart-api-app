@@ -1,13 +1,15 @@
 package com.gallery.fineart.mfineart.service.image;
 
 import com.gallery.fineart.mfineart.dto.*;
+import com.gallery.fineart.mfineart.exception.event.EventNotFoundException;
 import com.gallery.fineart.mfineart.exception.image.ImageNotFoundException;
 import com.gallery.fineart.mfineart.exception.image.MissingEntityBoundForImage;
+import com.gallery.fineart.mfineart.exception.painting.PaintingNotFoundException;
 import com.gallery.fineart.mfineart.mapper.ImageMapper;
 import com.gallery.fineart.mfineart.model.*;
+import com.gallery.fineart.mfineart.repository.EventRepository;
 import com.gallery.fineart.mfineart.repository.ImageRepository;
-import com.gallery.fineart.mfineart.service.event.EventService;
-import com.gallery.fineart.mfineart.service.painting.PaintingService;
+import com.gallery.fineart.mfineart.repository.PaintingRepository;
 import com.gallery.fineart.mfineart.service.s3.S3Service;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,20 +29,20 @@ public class ImageServiceImpl implements ImageService {
 
     private final ImageMapper imageMapper;
     private final ImageRepository imageRepository;
-    private final PaintingService paintingService;
-    private final EventService eventService;
+    private final PaintingRepository paintingRepository;
+    private final EventRepository eventRepository;
     private final S3Service s3Service;
 
     @Autowired
     public ImageServiceImpl(ImageMapper imageMapper,
                             ImageRepository imageRepository,
-                            PaintingService paintingService,
-                            EventService eventService,
+                            PaintingRepository paintingRepository,
+                            EventRepository eventRepository,
                             S3Service s3Service) {
         this.imageMapper = imageMapper;
         this.imageRepository = imageRepository;
-        this.paintingService = paintingService;
-        this.eventService = eventService;
+        this.paintingRepository = paintingRepository;
+        this.eventRepository = eventRepository;
         this.s3Service = s3Service;
     }
 
@@ -123,7 +125,7 @@ public class ImageServiceImpl implements ImageService {
             throw new IllegalArgumentException("Parameter paintingId cannot be null");
         }
 
-        Painting painting = paintingService.findPaintingById(paintingId);
+        Painting painting = findPaintingById(paintingId);
 
         return painting.getImages()
                 .stream()
@@ -137,7 +139,7 @@ public class ImageServiceImpl implements ImageService {
             throw new IllegalArgumentException("Parameter eventId cannot be null");
         }
 
-        Event event = eventService.findEventById(eventId);
+        Event event = findEventById(eventId);
 
         return event.getImages()
                 .stream()
@@ -182,12 +184,22 @@ public class ImageServiceImpl implements ImageService {
 
     private BaseGalleryEntity resolveImageParentEntity(ImageUploadDto imageUploadDto) {
         if (Objects.nonNull(imageUploadDto.getPaintingId())) {
-            return paintingService.findPaintingById(String.valueOf(imageUploadDto.getPaintingId()));
+            return findPaintingById(String.valueOf(imageUploadDto.getPaintingId()));
         }
         if (Objects.nonNull(imageUploadDto.getEventId())) {
-            return eventService.findEventById(String.valueOf(imageUploadDto.getEventId()));
+            return findEventById(String.valueOf(imageUploadDto.getEventId()));
         }
         throw new IllegalArgumentException("Image must be bound to a painting or event");
+    }
+
+    private Painting findPaintingById(String paintingId) {
+        return paintingRepository.findById(Long.parseLong(paintingId))
+                .orElseThrow(() -> new PaintingNotFoundException(paintingId));
+    }
+
+    private Event findEventById(String eventId) {
+        return eventRepository.findById(Long.parseLong(eventId))
+                .orElseThrow(() -> new EventNotFoundException(eventId));
     }
 
     private void editOldThumbnailForEntity(Image image) {

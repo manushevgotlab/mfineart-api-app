@@ -15,20 +15,16 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public abstract class CollectionMapper {
 
-    private final PaintingRepository paintingRepository;
-
     @Autowired
-    protected CollectionMapper(PaintingRepository paintingRepository) {
-        this.paintingRepository = paintingRepository;
-    }
+    private PaintingRepository paintingRepository;
 
-    @Mapping(target = "paintings", source = "java(fetchPaintings(collectionDto.getPaintingIds()))")
+    @Mapping(target = "paintings", expression = "java(fetchPaintings(collectionDto.getPaintingIds()))")
     public abstract ArtCollection toCollection(CollectionDto collectionDto);
 
-    @Mapping(target = "paintingIds", source = "java(getPaintingIds(artCollection.getPaintings()))")
+    @Mapping(target = "paintingIds", expression = "java(getPaintingIds(artCollection.getPaintings()))")
     public abstract CollectionDto toCollectionDto(ArtCollection artCollection);
 
-    private Set<Painting> fetchPaintings(Set<Long> paintingIds) {
+    protected Set<Painting> fetchPaintings(Set<Long> paintingIds) {
         if (paintingIds == null) {
             return Set.of();
         }
@@ -39,7 +35,7 @@ public abstract class CollectionMapper {
                 .collect(Collectors.toSet());
     }
 
-    private Set<Long> getPaintingIds(Set<Painting> paintings) {
+    protected Set<Long> getPaintingIds(Set<Painting> paintings) {
         if (paintings == null) {
             return Set.of();
         }
